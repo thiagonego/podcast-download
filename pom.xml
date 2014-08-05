@@ -24,8 +24,8 @@
 	<properties>
 		<spring.version>3.0.5.RELEASE</spring.version>
 		<junit.version>4.11</junit.version>
-		<thymeleaf.version>2.0.15</thymeleaf.version>
-		<jdk.version>1.6</jdk.version>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
 
 	<dependencies>
@@ -56,11 +56,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.3.3</version>
-		</dependency>
-		<dependency>
 			<groupId>jstl</groupId>
 			<artifactId>jstl</artifactId>
 			<version>1.2</version>
@@ -68,12 +63,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>0.11.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>2.3.3</version>
+			<version>1.14.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
@@ -130,46 +120,77 @@
 			<artifactId>xml-apis</artifactId>
 			<version>1.4.01</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.http-client</groupId> -->
-		<!-- <artifactId>google-http-client</artifactId> -->
-		<!-- <version>1.19.0</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.api.client</groupId> -->
-		<!-- <artifactId>google-api-client</artifactId> -->
-		<!-- <version>1.4.0-alpha</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.apis</groupId> -->
-		<!-- <artifactId>google-api-services-drive</artifactId> -->
-		<!-- <version>v2-rev135-1.19.0</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>com.google.api.client</groupId> -->
-		<!-- <artifactId>google-api-data-spreadsheet-v3</artifactId> -->
-		<!-- <version>1.0.10-alpha</version> -->
-		<!-- </dependency> -->
-
 
 		<!-- Google API + SpreadSheets -->
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
 			<version>1.19.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jsr305</artifactId>
+					<groupId>com.google.code.findbugs</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>httpclient</artifactId>
+					<groupId>org.apache.httpcomponents</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.google.gdata</groupId>
 			<artifactId>core</artifactId>
 			<version>1.47.1</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jsr305</artifactId>
+					<groupId>com.google.code.findbugs</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>google-oauth-client</artifactId>
+					<groupId>com.google.oauth-client</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>jetty</artifactId>
+					<groupId>org.mortbay.jetty</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.iubiquity</groupId>
 			<artifactId>spreadsheet-api</artifactId>
 			<version>1.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jsr305</artifactId>
+					<groupId>com.google.code.findbugs</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>httpclient</artifactId>
+					<groupId>org.apache.httpcomponents</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-drive</artifactId>
+			<version>v2-rev136-1.19.0</version>
 		</dependency>
 		<!-- Google API + SpreadSheets -->
 
+		<!-- ROME -->
+		<dependency>
+			<groupId>rome</groupId>
+			<artifactId>rome</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>rome</groupId>
+			<artifactId>modules</artifactId>
+			<version>0.3.2</version>
+		</dependency>
+		<!-- ROME -->
+		
 	</dependencies>
 
 	<build>

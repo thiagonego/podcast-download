@@ -1,6 +1,5 @@
 package com.tocolado.site.util;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +39,7 @@ public class PropertiesUtil {
      }
      
      public String getKey(){          
-//          return this.getClass().getClassLoader().getResource("META-INF/api-google.pem").getFile();
-          return this.getClass().getClassLoader().getResource("META-INF/key").getFile();
+          return this.getClass().getClassLoader().getResource("/home/thiago/Desenvolvimento/workspace_gosfest_mvn/gofest-site/src/main/resources/META-INF/API Project-258883e6e7b5.p12").getFile();
      }
      
 }

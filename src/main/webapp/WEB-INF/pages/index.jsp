@@ -1,4 +1,4 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"  %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
@@ -54,6 +54,14 @@
 						</tr>
 					</thead>
 					<tbody id="table-body">
+						<c:forEach var="pod" items="${podCasts}">
+						    <tr>
+						    	<td>${pod.feed}</td>
+						    	<td>${pod.emails}</td>
+						    	<td>${pod.ultimo}</td>
+						    	<td class='text-center'><a href='#' data-row='${pod.row}' class='run-feed'><i class='fa fa-cog'></i></a></td>
+						    </tr>
+						</c:forEach>					
 					</tbody>
 	            </table>
 	          </div>
@@ -79,17 +87,19 @@
 		        		tr +="</tr>";
 
 		        		jQuery('#table-body').append(tr);
-	        			binds();
 
 	        		}
 
 	        	});
+	        	
+       			binds();
 	        });
+		        
 			function binds(){
 			  jQuery('.run-feed').on('click',function(e){
 				var i = jQuery(this).find('i');
 				i.toggleClass('fa-spin');
-				jQuery.get('run/' + encodeURIComponent(jQuery(this).data('url')) + "/" + encodeURIComponent(jQuery(this).data('ultimo')), function(data){
+				jQuery.get('run/' + jQuery(this).data('row')), function(data){
 					console.log(JSON.stringify(data));
 				}).complete(function(){
 					i.toggleClass('fa-spin');
