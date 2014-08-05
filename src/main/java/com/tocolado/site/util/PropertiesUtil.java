@@ -40,7 +40,8 @@ public class PropertiesUtil {
      }
      
      public String getKey(){          
-          return this.getClass().getClassLoader().getResource("META-INF/api-google.pem").getFile();
+//          return this.getClass().getClassLoader().getResource("META-INF/api-google.pem").getFile();
+          return this.getClass().getClassLoader().getResource("META-INF/key").getFile();
      }
      
 }

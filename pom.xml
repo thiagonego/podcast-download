@@ -130,37 +130,45 @@
 			<artifactId>xml-apis</artifactId>
 			<version>1.4.01</version>
 		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>com.google.http-client</groupId> -->
+		<!-- <artifactId>google-http-client</artifactId> -->
+		<!-- <version>1.19.0</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.google.api.client</groupId> -->
+		<!-- <artifactId>google-api-client</artifactId> -->
+		<!-- <version>1.4.0-alpha</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.google.apis</groupId> -->
+		<!-- <artifactId>google-api-services-drive</artifactId> -->
+		<!-- <version>v2-rev135-1.19.0</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.google.api.client</groupId> -->
+		<!-- <artifactId>google-api-data-spreadsheet-v3</artifactId> -->
+		<!-- <version>1.0.10-alpha</version> -->
+		<!-- </dependency> -->
+
+
+		<!-- Google API + SpreadSheets -->
 		<dependency>
-			<groupId>com.google.http-client</groupId>
-			<artifactId>google-http-client</artifactId>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
 			<version>1.19.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.api.client</groupId>
-			<artifactId>google-api-client</artifactId>
-			<version>1.4.0-alpha</version>
+			<groupId>com.google.gdata</groupId>
+			<artifactId>core</artifactId>
+			<version>1.47.1</version>
 		</dependency>
-
 		<dependency>
-			<groupId>com.google.apis</groupId>
-			<artifactId>google-api-services-drive</artifactId>
-			<version>v2-rev135-1.19.0</version>
+			<groupId>com.iubiquity</groupId>
+			<artifactId>spreadsheet-api</artifactId>
+			<version>1.0</version>
 		</dependency>
-		
-		<dependency>
-	<groupId>com.google.gdata</groupId>
-	<artifactId>core</artifactId>
-	<version>1.47.1</version>
-</dependency>
-		
-		
-<dependency>
-	<groupId>com.google.api.client</groupId>
-	<artifactId>google-api-data-spreadsheet-v3</artifactId>
-	<version>1.0.10-alpha</version>
-</dependency>
-
-
+		<!-- Google API + SpreadSheets -->
 
 	</dependencies>
 
@@ -180,7 +188,6 @@
 			</resource>
 		</resources>
 		<plugins>
-
 
 			<plugin>
 				<groupId>org.apache.tomcat.maven</groupId>
