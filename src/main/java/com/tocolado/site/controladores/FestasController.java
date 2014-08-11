@@ -193,7 +193,7 @@ public class FestasController{
                               JsonFactory JSON_FACTORY = new JacksonFactory();
 
                               Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, null).setHttpRequestInitializer(getCredential()).build();
-                              com.google.api.services.drive.model.File file = insertFile(drive, Arquivo.extraiNomeDoArquivo(ep.getUrlEpisodeo()), ep.getUrlEpisodeo(), FOLDER_ID, TipoDeArquivo.TXT.getTipoDeArquivo(), inputEpisodeo);
+                              com.google.api.services.drive.model.File file = insertFile(drive, Arquivo.extraiNomeDoArquivo(ep.getUrlEpisodeo()), ep.getUrlEpisodeo(), FOLDER_ID, "audio/mpeg", inputEpisodeo);
 
                               return new ResponseEntity<String>("{ 'ultimo' : '" + Data.getDataFormatada(ep.getDataPublicacao(), "dd/MM/yyyy") + "', 'episodio' : '"+ file.getDownloadUrl() +"'}", HttpStatus.OK);
 
