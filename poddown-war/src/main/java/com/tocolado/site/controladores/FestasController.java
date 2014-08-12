@@ -3,7 +3,6 @@ package com.tocolado.site.controladores;
 
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import br.com.twsoftware.alfred.AlfredException;
 import br.com.twsoftware.alfred.data.Data;
 import br.com.twsoftware.alfred.io.Arquivo;
-import br.com.twsoftware.alfred.io.TipoDeArquivo;
 import br.com.twsoftware.alfred.object.Objeto;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -78,7 +76,7 @@ public class FestasController{
      @Setter
      public ConcurrentHashMap<Integer, PodCast> map;
 
-//     public static File UPLOADd_FILE = new File("/home/thiago/Desenvolvimento/workspace_gosfest_mvn/gofest-site/src/main/java/com/tocolado/site/util/Episodeo.java");
+     // public static File UPLOADd_FILE = new File("/home/thiago/Desenvolvimento/workspace_gosfest_mvn/gofest-site/src/main/java/com/tocolado/site/util/Episodeo.java");
 
      public static String FOLDER_ID = "0B4owD4in8_X7a3pXcGtFcDR1Z0E";
 
@@ -171,7 +169,7 @@ public class FestasController{
      public void changeUltimo(PodCast pod, Episodeo ep) throws IOException, ServiceException {
 
           if (Objeto.notBlank(spreadsheet)) {
-               
+
                for (WorksheetEntry ws : spreadsheet.getWorksheets()) {
 
                     CellFeed feed = spreadsheetService.getFeed(ws.getCellFeedUrl(), CellFeed.class);
@@ -179,14 +177,14 @@ public class FestasController{
                     for (CellEntry entry : feed.getEntries()) {
 
                          if (entry.getCell().getCol() == 3 && entry.getCell().getRow() == pod.getRow()) {
-                                   
+
                               spreadsheetService.insert(ws.getCellFeedUrl(), new CellEntry(entry.getCell().getRow(), entry.getCell().getCol(), Data.getDataFormatada(ep.getDataPublicacao(), "dd/MM/yyyy")));
-                              
+
                          }
                     }
                }
           }
-          
+
      }
 
      @RequestMapping(value = "/refresh", method = RequestMethod.GET)
@@ -197,42 +195,36 @@ public class FestasController{
      }
 
      @RequestMapping(value = "/run/{row}", method = RequestMethod.GET)
-     public ResponseEntity<String> run(@PathVariable String row, ModelMap model) {
+     public ResponseEntity<String> run(@PathVariable String row, ModelMap model) throws IllegalArgumentException, FeedException, IOException, ServiceException, GeneralSecurityException {
 
           if (Objeto.notBlank(map)) {
 
                PodCast pod = map.get(Integer.parseInt(row));
                if (Objeto.notBlank(pod)) {
 
-                    try {
+                    InputStream input = getConteudoArquivo(pod.getFeed());
+                    pod = readFeed(input, pod);
 
-                         InputStream input = getConteudoArquivo(pod.getFeed());
-                         pod = readFeed(input, pod);
+                    if (pod.baixar()) {
+                         // if (true) {
 
-                         if (pod.baixar()) {
-//                         if (true) {
+                         Episodeo ep = pod.getEpisodeos().get(0);
+                         InputStream inputEpisodeo = getConteudoArquivo(ep.getUrlEpisodeo());
 
-                              Episodeo ep = pod.getEpisodeos().get(0);
-                              InputStream inputEpisodeo = getConteudoArquivo(ep.getUrlEpisodeo());
+                         // Fazendo upload para o driver
+                         HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+                         JsonFactory JSON_FACTORY = new JacksonFactory();
 
-                              // Fazendo upload para o driver
-                              HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-                              JsonFactory JSON_FACTORY = new JacksonFactory();
+                         Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, null).setHttpRequestInitializer(getCredential()).build();
+                         com.google.api.services.drive.model.File file = insertFile(drive, Arquivo.extraiNomeDoArquivo(ep.getUrlEpisodeo()), ep.getUrlEpisodeo(), FOLDER_ID, "audio/mpeg", inputEpisodeo, pod.getEmails());
 
-                              Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, null).setHttpRequestInitializer(getCredential()).build();
-                              com.google.api.services.drive.model.File file = insertFile(drive, Arquivo.extraiNomeDoArquivo(ep.getUrlEpisodeo()), ep.getUrlEpisodeo(), FOLDER_ID, "audio/mpeg", inputEpisodeo, pod.getEmails());
-                              
-                              changeUltimo(pod, ep);
-                              
-                              return new ResponseEntity<String>("{ 'ultimo' : '" + Data.getDataFormatada(ep.getDataPublicacao(), "dd/MM/yyyy") + "', 'episodio' : '" + file.getDownloadUrl() + "'}", HttpStatus.OK);
+                         changeUltimo(pod, ep);
 
-                         } else {
+                         return new ResponseEntity<String>("{ 'ultimo' : '" + Data.getDataFormatada(ep.getDataPublicacao(), "dd/MM/yyyy") + "', 'episodio' : '" + file.getDownloadUrl() + "'}", HttpStatus.OK);
 
-                              return new ResponseEntity<String>("{ 'msg' : 'Desatualizado' }", HttpStatus.NO_CONTENT);
-                         }
+                    } else {
 
-                    } catch (Exception e) {
-                         e.printStackTrace();
+                         return new ResponseEntity<String>("{ 'msg' : 'Desatualizado' }", HttpStatus.NO_CONTENT);
                     }
 
                } else {
@@ -240,9 +232,12 @@ public class FestasController{
                     return new ResponseEntity<String>("Podcast não encontrado com o id informado", HttpStatus.NOT_FOUND);
                }
 
+          } else {
+
+               return new ResponseEntity<String>("Mapa esta em branco. Carregue novamente a página", HttpStatus.BAD_REQUEST);
+
           }
 
-          return new ResponseEntity<String>("Mapa esta em branco. Carregue novamente a página", HttpStatus.BAD_REQUEST);
      }
 
      public void init() {
@@ -260,13 +255,9 @@ public class FestasController{
           URL url = getClass().getClassLoader().getResource("META-INF/api-google-nova.p12");
           File key = new File(url.getFile());
 
-          GoogleCredential credential = new GoogleCredential.Builder()
-                                        .setTransport(HTTP_TRANSPORT)
-                                        .setJsonFactory(JSON_FACTORY)
-//                                        .setServiceAccountId("911071503471-a50bf6uo8hsoq3ukt76s6oq27t6t3uj6@developer.gserviceaccount.com")
-                                        .setServiceAccountId("246319659699-v9kgnv5mnd495rkrnkprpq19q9le4p9s@developer.gserviceaccount.com")
-                                        .setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/", "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive"))
-                                        .setServiceAccountPrivateKeyFromP12File(key).build();
+          GoogleCredential credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY)
+          // .setServiceAccountId("911071503471-a50bf6uo8hsoq3ukt76s6oq27t6t3uj6@developer.gserviceaccount.com")
+                    .setServiceAccountId("246319659699-v9kgnv5mnd495rkrnkprpq19q9le4p9s@developer.gserviceaccount.com").setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/", "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive")).setServiceAccountPrivateKeyFromP12File(key).build();
           credential.refreshToken();
           System.out.println(credential.getAccessToken());
           return credential;
@@ -308,24 +299,26 @@ public class FestasController{
      // return service;
      // }
 
-//     public static void main(String[] args) throws GeneralSecurityException, IOException, ServiceException {
-//
-//          FestasController f = new FestasController();
-//
-//          HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-//          JsonFactory JSON_FACTORY = new JacksonFactory();
-//
-//          File key = new File("/home/thiago/Desenvolvimento/workspace_gosfest_mvn/gofest-site/src/main/resources/META-INF/API Project-258883e6e7b5.p12");
-//          GoogleCredential credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY).setServiceAccountId("911071503471-a50bf6uo8hsoq3ukt76s6oq27t6t3uj6@developer.gserviceaccount.com").setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/", "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive")).setServiceAccountPrivateKeyFromP12File(key).build();
-//          credential.refreshToken();
-//          System.out.println(credential.getAccessToken());
-//
-//          Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, null).setHttpRequestInitializer(credential).build();
-//
-//          insertFile(drive, "upload", "arquivo feito upload no java", FOLDER_ID, TipoDeArquivo.TXT.getTipoDeArquivo(), new FileInputStream(UPLOAD_FILE), "thiago.sampaio@neus.com.br");
-//
-//          System.out.println(Arquivo.extraiNomeDoArquivo("http://jovemnerd.com.br/podpress_trac/feed/99890/0/nerdcast_424_matematica.mp3"));
-//     }
+     // public static void main(String[] args) throws GeneralSecurityException, IOException, ServiceException {
+     //
+     // FestasController f = new FestasController();
+     //
+     // HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+     // JsonFactory JSON_FACTORY = new JacksonFactory();
+     //
+     // File key = new File("/home/thiago/Desenvolvimento/workspace_gosfest_mvn/gofest-site/src/main/resources/META-INF/API Project-258883e6e7b5.p12");
+     // GoogleCredential credential = new
+     // GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY).setServiceAccountId("911071503471-a50bf6uo8hsoq3ukt76s6oq27t6t3uj6@developer.gserviceaccount.com").setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/",
+     // "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive")).setServiceAccountPrivateKeyFromP12File(key).build();
+     // credential.refreshToken();
+     // System.out.println(credential.getAccessToken());
+     //
+     // Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, null).setHttpRequestInitializer(credential).build();
+     //
+     // insertFile(drive, "upload", "arquivo feito upload no java", FOLDER_ID, TipoDeArquivo.TXT.getTipoDeArquivo(), new FileInputStream(UPLOAD_FILE), "thiago.sampaio@neus.com.br");
+     //
+     // System.out.println(Arquivo.extraiNomeDoArquivo("http://jovemnerd.com.br/podpress_trac/feed/99890/0/nerdcast_424_matematica.mp3"));
+     // }
 
      private static com.google.api.services.drive.model.File insertFile(Drive service, String title, String description, String parentId, String mimeType, InputStream inputStream, String emails) {
 
@@ -369,7 +362,13 @@ public class FestasController{
      public static InputStream getConteudoArquivo(String u) {
 
           try {
-
+               
+//               HTTPRequest request = new HTTPRequest(new URL(u), HTTPMethod.POST, Builder.allowTruncate());
+//               URLFetchService service = URLFetchServiceFactory.getURLFetchService();
+//               HTTPResponse response = service.fetch(request);
+//               
+//               return new ByteArrayInputStream(response.getContent());
+ 
                URL url = new URL(u);
                URLConnection conn = url.openConnection();
                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 5.1; rv:19.0) Gecko/20100101 Firefox/19.0");
