@@ -36,7 +36,7 @@
 		font-weight: bold;
 	  }
     </style>    
-	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery.min.js"/>
+	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery.min.js"></script>
    	<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/bootstrap.min.js"></script>
     <script type="text/javascript">
        	
@@ -45,21 +45,38 @@
 	        
 		  jQuery('.run-feed').on('click',function(e){
 
-			var i = jQuery(this).find('i');
-			i.toggleClass('fa-spin');
-			
-			jQuery.get('run/' + jQuery(this).data('row'), function(data){
-				console.log(JSON.stringify(data));
-			}).complete(function(){
+				var item = jQuery(this);
+				var i = item.find('i');
 				i.toggleClass('fa-spin');
-			});
+
+				jQuery.ajax({
+				    url: 'run/' + item.data('row'),
+				    success: function(data, textStatus, jqXHR){
+						console.log(data, textStatus, jqXHR);
+						alert(data, 'alert-success');
+				    },
+				    error: function(jqXHR, textStatus, errorThrown){
+					    console.log(jqXHR, textStatus, errorThrown);
+					    alert(jqXHR.responseText, 'alert-danger');
+					},
+					complete: function(data){
+						i.toggleClass('fa-spin');
+					}
+				});
+			
 			e.preventDefault();
 			
 		  });	
 		  		
         });
 	        
-		function binds(){
+		function alert(msg, klasse){
+			var div = 
+			"<div id='alert' class='alert alert-dismissible "+ klasse + "' role='alert'> "+
+			  "<button type='button' class='close' data-dismiss='alert'><span aria-hidden='true'>&times;</span><span class='sr-only'>Close</span></button>"+
+			  msg +
+			"</div>";
+			jQuery('#alert').html(div);				
 		}
     </script> 	    
 </head>
@@ -67,50 +84,52 @@
 	<body>
 	
 	    <div class="container">
+	    	
+			<div id="alert"></div>
 			
-		<div class="row">
-			<div class="col-sm-12">
-		        <ul class="nav nav-pills pull-right">
-		          <li class="active-">
-		          	<a href="${pageContext.request.contextPath}/refresh">
-		          		<i class="fa fa-refresh"></i>
-		          		Recarregar
-		          	</a>
-		          </li>
-		        </ul>
-		        <h3 class="text-muted">Podcast</h3>
-		        <hr/>
-	        </div>
-      	</div>	    
+			<div class="row">
+				<div class="col-sm-12">
+			        <ul class="nav nav-pills pull-right">
+			          <li class="active-">
+			          	<a href="${pageContext.request.contextPath}/refresh">
+			          		<i class="fa fa-refresh"></i>
+			          		Recarregar
+			          	</a>
+			          </li>
+			        </ul>
+			        <h3 class="text-muted">Podcast</h3>
+			        <hr/>
+		        </div>
+	      	</div>	    
 	    
-	      <form role="form">    
-	        <div class="row">
-	          <div class="col-sm-12">
-	            <table class="table table-striped- table-bordered table-hover">
-					<thead class="bg-primary">
-						<tr>
-							<td class="text-center ">ID</td>
-							<td class="text-center ">FEED</td>
-							<td class="text-center ">EMAILS</td>
-							<td class="text-center ">ULTIMO</td>
-							<td class="text-center ">OPTS</td>
-						</tr>
-					</thead>
-					<tbody id="table-body">
-						<c:forEach var="pod" items="${podCasts}">
-						    <tr>
-						    	<td class="text-center">${pod.row}</td>
-						    	<td>${pod.feed}</td>
-						    	<td>${pod.emails}</td>
-						    	<td class="text-center">${pod.ultimo}</td>
-						    	<td class='text-center'><a href='#' data-row='${pod.row}' class='run-feed'><i class='fa fa-cog'></i></a></td>
-						    </tr>
-						</c:forEach>					
-					</tbody>
-	            </table>
-	          </div>
-	        </div>
-	      </form>
+		      <form role="form">    
+		        <div class="row">
+		          <div class="col-sm-12">
+		            <table class="table table-striped- table-bordered table-hover">
+						<thead class="bg-primary">
+							<tr>
+								<td class="text-center ">ID</td>
+								<td class="text-center ">FEED</td>
+								<td class="text-center ">EMAILS</td>
+								<td class="text-center ">ULTIMO</td>
+								<td class="text-center ">OPTS</td>
+							</tr>
+						</thead>
+						<tbody id="table-body">
+							<c:forEach var="pod" items="${podCasts}">
+							    <tr>
+							    	<td class="text-center">${pod.row}</td>
+							    	<td>${pod.feed}</td>
+							    	<td>${pod.emails}</td>
+							    	<td class="text-center">${pod.ultimo}</td>
+							    	<td class='text-center'><a href='#' data-row='${pod.row}' class='run-feed'><i class='fa fa-cog'></i></a></td>
+							    </tr>
+							</c:forEach>					
+						</tbody>
+		            </table>
+		          </div>
+		        </div>
+		      </form>
 	    </div>  
 	</body>
 </html>	

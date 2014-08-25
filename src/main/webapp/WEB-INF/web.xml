@@ -19,7 +19,7 @@
 	<session-config>
 		<session-timeout>10</session-timeout>
 		<cookie-config>
-			<name>GOFEST</name>
+			<name>PODDOWN</name>
 		</cookie-config>
 	</session-config>
 </web-app>
