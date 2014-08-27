@@ -3,6 +3,7 @@ package br.com.twsoftware.poddown.util;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -45,14 +46,29 @@ public class PodCast{
                System.out.println(getEpisodeos().get(0));
 
                Date u = br.com.twsoftware.alfred.data.Data.getData(getUltimo(), "dd/MM/yyyy");
-               u = br.com.twsoftware.alfred.data.Data.getData(u, 00, 00, 00, 00);
-               if (getEpisodeos().get(0).getDataPublicacao().after(u)) {
+               u = resetDate(u);
+
+               Date u1 = getEpisodeos().get(0).getDataPublicacao();
+               u1 = resetDate(u1);
+
+               if (u1.after(u)) {
                     return true;
                }
 
           }
 
           return false;
+     }
+
+     public Date resetDate(Date date) {
+          
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(date);
+          cal.set(Calendar.HOUR_OF_DAY, 0);
+          cal.set(Calendar.MINUTE, 0);
+          cal.set(Calendar.SECOND, 0);
+          cal.set(Calendar.MILLISECOND, 0);
+          return cal.getTime();
      }
 
 }

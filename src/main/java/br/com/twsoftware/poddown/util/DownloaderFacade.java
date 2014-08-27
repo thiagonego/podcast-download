@@ -28,15 +28,21 @@ public class DownloaderFacade{
      @Setter
      @Getter
      private boolean running;
-     
+
+     @Getter
+     @Setter
+     private String progressMsg;
+
      private static DownloaderFacade instance;
-     
+
      private DownloaderFacade(){
+
           this.running = false;
      }
-     
-     public static DownloaderFacade getInstance(){
-          if(instance == null){
+
+     public static DownloaderFacade getInstance() {
+
+          if (instance == null) {
                instance = new DownloaderFacade();
           }
           return instance;

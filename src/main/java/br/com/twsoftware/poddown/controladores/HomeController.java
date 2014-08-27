@@ -1,6 +1,7 @@
 
 package br.com.twsoftware.poddown.controladores;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,9 +25,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import br.com.twsoftware.alfred.data.Data;
 import br.com.twsoftware.alfred.io.Arquivo;
+import br.com.twsoftware.alfred.io.TipoDeArquivo;
 import br.com.twsoftware.alfred.object.Objeto;
 import br.com.twsoftware.poddown.util.DownloaderFacade;
 import br.com.twsoftware.poddown.util.Episodeo;
+import br.com.twsoftware.poddown.util.FileUploadProgressListener;
 import br.com.twsoftware.poddown.util.PodCast;
 import br.com.twsoftware.poddown.util.Util;
 
@@ -39,6 +42,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.ParentReference;
 import com.google.api.services.drive.model.Permission;
+import com.google.common.io.Files;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.spreadsheet.CellEntry;
 import com.google.gdata.data.spreadsheet.CellFeed;
@@ -229,6 +233,7 @@ public class HomeController{
 
                               } else {
 
+                                   DownloaderFacade.getInstance().setRunning(false);
                                    return new ResponseEntity<String>("Ainda não foi publicado nenhum episódeo novo desse podcast", HttpStatus.BAD_REQUEST);
                               }
 
@@ -248,18 +253,20 @@ public class HomeController{
 
                     } else {
 
+                         DownloaderFacade.getInstance().setRunning(false);
                          return new ResponseEntity<String>("Podcast não encontrado com o id informado", HttpStatus.NOT_FOUND);
                     }
 
                } else {
 
+                    DownloaderFacade.getInstance().setRunning(false);
                     return new ResponseEntity<String>("Mapa esta em branco. Carregue novamente a página", HttpStatus.BAD_REQUEST);
 
                }
 
           } else {
 
-               return new ResponseEntity<String>("Download em execução. Aguarde!", HttpStatus.OK);
+               return new ResponseEntity<String>(DownloaderFacade.getInstance().getProgressMsg(), HttpStatus.OK);
           }
 
      }
@@ -275,15 +282,14 @@ public class HomeController{
 
           HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
           JsonFactory JSON_FACTORY = new JacksonFactory();
-
-          URL url = getClass().getClassLoader().getResource("META-INF/api-google-nova.p12");
+          URL url = getClass().getClassLoader().getResource("META-INF/neuspodcast-7a5ce496f224.p12");
           File key = new File(url.getFile());
 
-          GoogleCredential credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY).setServiceAccountId("246319659699-v9kgnv5mnd495rkrnkprpq19q9le4p9s@developer.gserviceaccount.com").setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/", "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive")).setServiceAccountPrivateKeyFromP12File(key).build();
+          GoogleCredential credential = new GoogleCredential.Builder().setTransport(HTTP_TRANSPORT).setJsonFactory(JSON_FACTORY).setServiceAccountId("664177038266-bh055m7b2t6d58tcll9u192vh1mrkaqm@developer.gserviceaccount.com").setServiceAccountScopes(Arrays.asList("https://spreadsheets.google.com/feeds/", "http://spreadsheets.google.com/feeds", "https://docs.google.com/feeds/", "https://www.googleapis.com/auth/drive")).setServiceAccountPrivateKeyFromP12File(key).build();
+
           credential.refreshToken();
           System.out.println(credential.getAccessToken());
           return credential;
-
      }
 
      public PodCast readFeed(InputStream inputStream, PodCast pod) throws IllegalArgumentException, FeedException, IOException {
@@ -312,25 +318,32 @@ public class HomeController{
 
      private com.google.api.services.drive.model.File insertFile(Drive service, String title, String description, String parentId, String mimeType, InputStream inputStream, String emails) throws IOException {
 
-          com.google.api.services.drive.model.File file;
+          com.google.api.services.drive.model.File f = null;
           try {
 
-               // File's metadata.
                com.google.api.services.drive.model.File body = new com.google.api.services.drive.model.File();
                body.setTitle(title);
                body.setDescription(description);
-               body.setMimeType(mimeType);
                body.setShared(true);
+               body.setMimeType(mimeType);
+               // body.setMimeType(TipoDeArquivo.JPG.getTipoDeArquivo());
 
                // Set the parent folder.
                if (parentId != null && parentId.length() > 0) {
                     body.setParents(Arrays.asList(new ParentReference().setId(parentId)));
                }
 
-               // File's content.
-               InputStreamContent mediaContent = new InputStreamContent(mimeType, inputStream);
+               byte[] conteudo = org.apache.commons.io.IOUtils.toByteArray(inputStream);
+               // byte[] conteudo = Files.toByteArray(new File("/home/thiago/Imagens/206980_10150142139228527_1176417_n.jpg"));
 
-               file = service.files().insert(body, mediaContent).execute();
+               // File's content.
+               InputStreamContent mediaContent = new InputStreamContent(mimeType, new ByteArrayInputStream(conteudo));
+               mediaContent.setLength(conteudo.length);
+
+               Drive.Files.Insert request = service.files().insert(body, mediaContent);
+               request.getMediaHttpUploader().setProgressListener(new FileUploadProgressListener(title));
+
+               f = request.execute();
 
                Permission newPermission = new Permission();
                newPermission.setValue(emails);
@@ -338,18 +351,23 @@ public class HomeController{
                newPermission.setType("anyone");
                newPermission.setRole("reader");
 
-               Permission permission = service.permissions().insert(file.getId(), newPermission).execute();
-
-               System.out.println("File ID: " + file.getId());
+               Permission permission = service.permissions().insert(f.getId(), newPermission).execute();
+               
+               init();
+               
+               System.out.println("File ID: " + f.getId());
                System.out.println(permission);
 
           } catch (IOException e) {
                e.printStackTrace();
-               DownloaderFacade.getInstance().setRunning(false);
                throw e;
+
+          } finally {
+
+               DownloaderFacade.getInstance().setRunning(false);
           }
 
-          return file;
+          return f;
 
      }
 
