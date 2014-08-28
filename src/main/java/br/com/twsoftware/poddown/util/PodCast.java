@@ -20,6 +20,10 @@ public class PodCast{
      public String emails;
 
      public String ultimo;
+     
+     public String link;
+     
+     public String nome;
 
      public Integer row;
 

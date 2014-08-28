@@ -7,6 +7,7 @@
 	<title>Podcast - Download</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<meta charset="utf-8">
+	<meta http-equiv="refresh" content="60" >
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/resources/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/resources/css/bootstrap-theme.css">
     <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/resources/css/font-awesome.min.css">
@@ -67,6 +68,28 @@
 			e.preventDefault();
 			
 		  });	
+
+		  jQuery('.btn-enviar-email').on('click',function(){
+			  
+			  	var item = jQuery(this).data('pod-id');
+			  	location.href = 
+
+				jQuery.ajax({
+				    url: 'email/' + item.data('row'),
+				    success: function(data, textStatus, jqXHR){
+						console.log(data, textStatus, jqXHR);
+						alert(data, 'alert-success');
+				    },
+				    error: function(jqXHR, textStatus, errorThrown){
+					    console.log(jqXHR, textStatus, errorThrown);
+					    alert(jqXHR.responseText, 'alert-danger');
+					},
+					complete: function(data){
+						i.toggleClass('fa-spin');
+					}
+				});
+							  
+		  });
 		  		
         });
 	        
@@ -109,6 +132,7 @@
 						<thead class="bg-primary">
 							<tr>
 								<td class="text-center ">ID</td>
+								<td class="text-center ">NOME</td>
 								<td class="text-center ">FEED</td>
 								<td class="text-center ">EMAILS</td>
 								<td class="text-center ">ULTIMO</td>
@@ -119,10 +143,35 @@
 							<c:forEach var="pod" items="${podCasts}">
 							    <tr>
 							    	<td class="text-center">${pod.row}</td>
+							    	<td class="text-center">${pod.nome}</td>
 							    	<td>${pod.feed}</td>
 							    	<td>${pod.emails}</td>
 							    	<td class="text-center">${pod.ultimo}</td>
-							    	<td class='text-center'><a href='#' data-row='${pod.row}' class='run-feed'><i class='fa fa-cog'></i></a></td>
+							    	<td class='text-center'>
+							    		<a href='#' data-row='${pod.row}' class='run-feed'><i class='fa fa-cog'></i></a>
+							    		<a href='${pod.link}'><i class='fa fa-cloud-download'></i></a>
+							    		
+							    		<a href='#' data-toggle="modal" data-target="#modalEmail${pod.row}" ><i class='fa fa-envelope-o'></i></a>
+							    		
+										<div class="modal fade" id="modalEmail${pod.row}" tabindex="-1" role="dialog" aria-labelledby="modalEmailLabel" aria-hidden="true">
+										  <div class="modal-dialog">
+										    <div class="modal-content">
+										      <div class="modal-header">
+										        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+										        <h4 class="modal-title" id="modalEmailLabel">Enviar email?</h4>
+										      </div>
+										      <div class="modal-body text-left">
+										       Deseja mesmo enviar emails para: <br/> ${pod.emails} ?
+										      </div>
+										      <div class="modal-footer">
+										        <button type="button" class="btn btn-default" data-dismiss="modal">Não</button>
+										        <a href="email/${pod.row}" class="btn btn-primary">Sim</a>
+										      </div>
+										    </div>
+										  </div>
+										</div>							    		
+							    			    		
+							    	</td>
 							    </tr>
 							</c:forEach>					
 						</tbody>
@@ -131,5 +180,9 @@
 		        </div>
 		      </form>
 	    </div>  
+	     
+	 
+		
+		   
 	</body>
 </html>	

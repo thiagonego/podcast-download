@@ -42,11 +42,11 @@ public class FileUploadProgressListener implements MediaHttpUploaderProgressList
                     break;
                case MEDIA_COMPLETE:
                     log.info("Upload is complete!");
-                    DownloaderFacade.getInstance().setRunning(false);
+                    GeralFacade.getInstance().setRunning(false);
 
           }
 
-          DownloaderFacade.getInstance().setProgressMsg(r);
+          GeralFacade.getInstance().setProgressMsg(r);
           log.info(r);
      }
      
